@@ -1,6 +1,6 @@
 import { SlackController, Message, SlackMessage } from "botkit";
-export default (controller: SlackController) => {
 
+export default (controller: SlackController) => {
     controller.middleware.receive.use((bot, message: any, next) => {
       if (message.type == 'interactive_message_callback') {
         if (message.actions[0].name.match(/^say$/)) {
