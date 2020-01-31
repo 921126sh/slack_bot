@@ -1,39 +1,19 @@
 import { SlackAdapter, SlackMessageTypeMiddleware, SlackEventMiddleware } from "botbuilder-adapter-slack";
 import { Botkit } from "botkit";
 import dotenv from 'dotenv';
-import { loadSkills } from "./features";
 dotenv.config();
-
 
 if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET || !process.env.PORT || !process.env.VERIFICATION_TOKEN) {
   console.log('Error: Specify CLIENT_ID, CLIENT_SECRET, VERIFICATION_TOKEN and PORT in environment');
   process.exit(1);
 }
 
-let config = {}
 // 몽고디비 쓸려면...
 // if (process.env.MONGO_URI) {
 //   storage = mongoStorage = new MongoDbStorage({
 //       url : process.env.MONGO_URI,
 //   });
 // }
-
-// if (process.env.MONGOLAB_URI) {
-//   let BotkitStorage = require('botkit-storage-mongo');
-//   config = {
-//     storage: BotkitStorage({
-//       mongoUri: process.env.MONGOLAB_URI
-//     }),
-//   };
-// } else {
-
-// }
-
-config = {
-  debug: true,
-  json_file_store: './db_slackbutton_slash_command/',
-};
-
 
 const adapter: SlackAdapter = new SlackAdapter({
   // REMOVE THIS OPTION AFTER YOU HAVE CONFIGURED YOUR APP!
@@ -70,11 +50,9 @@ const controller = new Botkit({
 
 // Once the bot has booted up its internal services, you can use them to do stuff.
 controller.ready(() => {
-  console.log('__dirname',__dirname);
-
   // load traditional developer-created local custom feature modules
-  // controller.loadModules(__dirname + '/features');
-  loadSkills(controller);
+  controller.loadModules(__dirname + '/features',['.ts']);
+
   /* catch-all that uses the CMS to trigger dialogs */
   if (controller.plugins.cms) {
     controller.on('message,direct_message', async (bot, message) => {
