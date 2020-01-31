@@ -1,100 +1,158 @@
-import Botkit, { SlackController, SlackBot } from 'botkit';
+import { SlackAdapter, SlackMessageTypeMiddleware, SlackEventMiddleware } from "botbuilder-adapter-slack";
+import { Botkit } from "botkit";
 import dotenv from 'dotenv';
-import { loadSkills } from './skill';
-
-/*****************************************슬랙 봇 기동순서******************************************************
- * 
- * 
- * 1. env파일을 메모리에 적재한다.
- * 2. 봇과 슬랙설정(토큰, id, 등등...)이 일치하는지 확인한다.
- * 3. 몽고DB 혹은 json을 설정한다.
- *  * 반드시 한 저장소에는 접속된 채널 정보가 필수로 필요하기 때문이다.
- * 4. 설정정보를 통해 슬랙 봇 모듈을 생성한다.
- * 5. 슬랙 봇 모듈에 사용 가능한 기능을 모듈화하여 저장한다.
- * 6. [봇]을 실행한다.
- * 7. [웹 서버]를 실행한다.
- **********************************************************************************************************/
-
- /*****************************************INFO************************************************************
- * 
- * [봇]
- *  - 슬랙 workspace의 토큰값을 통하여 stream형태로 연결된다.
- * 
- * [웹 서버]
- *  - 슬래쉬 커맨드를 사용하기 위해서 반드시 필요하다.
- *  - 슬랙에서 슬래쉬 커맨드를 등록 후 http://[도메인]/login 을 통해 최초 채널 정보 및 사용자 설정을 생성해야한다.
- **********************************************************************************************************/
-
-
-// config를 동기화 한다.
+import { loadSkills } from "./features";
 dotenv.config();
 
-// slack정보를 체크한다.
+
 if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET || !process.env.PORT || !process.env.VERIFICATION_TOKEN) {
   console.log('Error: Specify CLIENT_ID, CLIENT_SECRET, VERIFICATION_TOKEN and PORT in environment');
   process.exit(1);
 }
 
-
-// 설정파일을 설정한다.
 let config = {}
-if (process.env.MONGOLAB_URI) {
-  let BotkitStorage = require('botkit-storage-mongo');
-  config = {
-    storage: BotkitStorage({
-      mongoUri: process.env.MONGOLAB_URI
-    }),
-  };
-} else {
-  config = {
-    debug: true,
-    json_file_store: './db_slackbutton_slash_command/',
-    clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
-  };
-}
+// 몽고디비 쓸려면...
+// if (process.env.MONGO_URI) {
+//   storage = mongoStorage = new MongoDbStorage({
+//       url : process.env.MONGO_URI,
+//   });
+// }
 
-// 슬랙봇 모듈을 생성한다.
-let controller: SlackController = Botkit.slackbot(config).configureSlackApp({
+// if (process.env.MONGOLAB_URI) {
+//   let BotkitStorage = require('botkit-storage-mongo');
+//   config = {
+//     storage: BotkitStorage({
+//       mongoUri: process.env.MONGOLAB_URI
+//     }),
+//   };
+// } else {
+
+// }
+
+config = {
+  debug: true,
+  json_file_store: './db_slackbutton_slash_command/',
+};
+
+
+const adapter: SlackAdapter = new SlackAdapter({
+  // REMOVE THIS OPTION AFTER YOU HAVE CONFIGURED YOUR APP!
+  enable_incomplete: false,
+
+  // parameters used to secure webhook endpoint
+  verificationToken: process.env.VERIFICATION_TOKEN,
+  clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
+
+  // auth token for a single-team app
+  botToken: process.env.BOT_TOKEN,
+
+  // credentials used to set up oauth for multi-team apps
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  redirectUri: `${process.env.HOST_SERVER}/oauth`,
   scopes: ['commands', 'bot'],
+  redirectUri: process.env.REDIRECT_URI,
+  // functions required for retrieving team-specific info
+  // for use in multi-team apps
+  getTokenForTeam: getTokenForTeam,
+  getBotUserByTeam: getBotUserByTeam,
 });
 
-// 기술목록을 생성한다.
-loadSkills(controller);
-controller.startTicking();
+// Use SlackEventMiddleware to emit events that match their original Slack event types.
+adapter.use(new SlackEventMiddleware());
 
-// 봇을 생성한다.
-const bot: SlackBot = controller.spawn({
-  token: process.env.SLACK_BOT_TOKEN || '',
+// Use SlackMessageType middleware to further classify messages as direct_message, direct_mention, or mention
+adapter.use(new SlackMessageTypeMiddleware());
+
+const controller = new Botkit({
+  webhook_uri: '/slack/receive',
+  adapter: adapter,
 });
 
-// 봇을 시작한다.
-bot.startRTM((error: any) => {
-  if (error) {
-    console.log(error, '구동에 실패했습니다.');
-  } else {
-    // bot.say({ text: '봇이 배포되었습니다! 😄', channel: 'slack-dev' });
+// Once the bot has booted up its internal services, you can use them to do stuff.
+controller.ready(() => {
+  console.log('__dirname',__dirname);
+
+  // load traditional developer-created local custom feature modules
+  // controller.loadModules(__dirname + '/features');
+  loadSkills(controller);
+  /* catch-all that uses the CMS to trigger dialogs */
+  if (controller.plugins.cms) {
+    controller.on('message,direct_message', async (bot, message) => {
+      let results = false;
+      results = await controller.plugins.cms.testTrigger(bot, message);
+
+      if (results !== false) {
+        // do not continue middleware!
+        return false;
+      }
+    });
+  }
+
+});
+
+
+controller.webserver.get('/', (req: any, res: any) => {
+  res.send(`This app is running Botkit ${controller.version}.`);
+});
+
+controller.webserver.get('/login', (req: any, res: any) => {
+  // getInstallLink points to slack's oauth endpoint and includes clientId and scopes
+  res.redirect(controller.adapter.getInstallLink());
+});
+
+controller.webserver.get('/oauth', async (req: any, res: any) => {
+  try {
+      const results = await controller.adapter.validateOauthCode(req.query.code);
+
+      console.log('FULL OAUTH DETAILS', results);
+
+      // Store token by team in bot state.
+      tokenCache[results.team_id] = results.bot.bot_access_token;
+
+      // Capture team to bot id
+      userCache[results.team_id] =  results.bot.bot_user_id;
+
+      res.json('Success!');
+
+  } catch (err) {
+      console.error('OAUTH ERROR:', err);
+      res.status(401);
+      res.send(err.message);
   }
 });
 
-/**
- * 웹서버를 시작한다.
- */
-controller.setupWebserver(process.env.PORT, function (err: any, webserver: any) {
-  controller.createWebhookEndpoints(webserver);
+let tokenCache: any = {};
+let userCache: any = {};
 
-  controller.createOauthEndpoints(webserver, function (err: any, req: any, res: any) {
-    if (err) {
-      res.status(500).send('OAUTH ENDPOINT ERROR ================> : ' + err);
-    } else {
-      res.send('Success!');
-    }
-  });
-});
+async function getTokenForTeam(teamId: any): Promise<any> {
+  if (tokenCache[teamId]) {
+    return new Promise((resolve) => {
+      setTimeout(function () {
+        resolve(tokenCache[teamId]);
+      }, 150);
+    });
+  } else {
+    console.error('Team not found in tokenCache: ', teamId);
+  }
+}
 
-controller.hears('hi', 'direct_message', (bot: SlackBot, message: any) => {
-  bot.reply(message, 'Hello.');
-});
+async function getBotUserByTeam(teamId: any): Promise<any> {
+  if (userCache[teamId]) {
+    return new Promise((resolve) => {
+      setTimeout(function () {
+        resolve(userCache[teamId]);
+      }, 150);
+    });
+  } else {
+    console.error('Team not found in userCache: ', teamId);
+  }
+}
+
+
+
+
+
+
+
+
 
