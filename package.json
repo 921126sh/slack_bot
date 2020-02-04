@@ -4,8 +4,10 @@
     "start": "nodemon --exec ts-node app.ts"
   },
   "dependencies": {
-    "@slack/client": "^5.0.2",
     "@slack/events-api": "^2.3.1",
+    "@slack/interactive-messages": "^1.4.1",
+    "@slack/web-api": "^5.7.0",
+    "@slack/webhook": "^5.0.2",
     "dotenv": "^7.0.0",
     "nodemon": "^2.0.2",
     "ts-node": "^8.0.3",
