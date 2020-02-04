@@ -4,8 +4,8 @@
     "start": "nodemon --exec ts-node app.ts"
   },
   "dependencies": {
-    "botbuilder-adapter-slack": "^1.0.8",
-    "botkit": "^4.6.2",
+    "@slack/client": "^5.0.2",
+    "@slack/events-api": "^2.3.1",
     "dotenv": "^7.0.0",
     "nodemon": "^2.0.2",
     "ts-node": "^8.0.3",

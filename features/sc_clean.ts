@@ -1,11 +1,9 @@
 import { SlackBotWorker } from "botbuilder-adapter-slack";
-import { Botkit } from "botkit";
+import { Botkit, BotWorker } from "botkit";
 
 export default (controller: any) => {
-    controller.on('slash_command', async (bot: any, message: any) => {
-        console.log('message',message);
-        console.log('bot',bot);
-
+    controller.on('slash_command', async (bot: SlackBotWorker, message: any) => {
+        
         switch (message.command) {
             case "/clean":
                 if (message.token !== process.env.VERIFICATION_TOKEN) {

@@ -7,10 +7,13 @@ import { Botkit } from "botkit";
 export default (controller: Botkit) => {
 
     controller.hears('sample','message,direct_message', async(bot, message) => {
+        console.log("?????????????????????")
         await bot.reply(message, 'I heard a sample message.');
     });
 
     controller.on('message,direct_message', async(bot, message) => {
+        console.log("?????????????????????")
+
         await bot.reply(message, `Echo: ${ message.text }`);
     });
 

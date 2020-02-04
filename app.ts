@@ -1,136 +1,135 @@
-import { SlackAdapter, SlackMessageTypeMiddleware, SlackEventMiddleware } from "botbuilder-adapter-slack";
-import { Botkit } from "botkit";
-import dotenv from 'dotenv';
-dotenv.config();
 
+import { RTMClient, LogLevel, WebClientEvent, TLSOptions, ErrorCode, UsersListArguments, WebAPICallOptions } from "@slack/client";
+import SlackEventAdapter, { verifyRequestSignature, errorCodes } from "@slack/events-api";
+import dotenv from 'dotenv';
+
+dotenv.config();
 if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET || !process.env.PORT || !process.env.VERIFICATION_TOKEN) {
   console.log('Error: Specify CLIENT_ID, CLIENT_SECRET, VERIFICATION_TOKEN and PORT in environment');
   process.exit(1);
 }
 
-// 몽고디비 쓸려면...
-// if (process.env.MONGO_URI) {
-//   storage = mongoStorage = new MongoDbStorage({
-//       url : process.env.MONGO_URI,
-//   });
-// }
 
-const adapter: SlackAdapter = new SlackAdapter({
-  // REMOVE THIS OPTION AFTER YOU HAVE CONFIGURED YOUR APP!
-  enable_incomplete: false,
+let token: string | any = process.env.SLACK_BOT_TOKEN;
 
-  // parameters used to secure webhook endpoint
-  verificationToken: process.env.VERIFICATION_TOKEN,
-  clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
-
-  // auth token for a single-team app
-  botToken: process.env.BOT_TOKEN,
-
-  // credentials used to set up oauth for multi-team apps
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  scopes: ['commands', 'bot'],
-  redirectUri: process.env.REDIRECT_URI,
-  // functions required for retrieving team-specific info
-  // for use in multi-team apps
-  getTokenForTeam: getTokenForTeam,
-  getBotUserByTeam: getBotUserByTeam,
+const rtm = new RTMClient(token, {
+  // logLevel: LogLevel.ERROR,
 });
 
-// Use SlackEventMiddleware to emit events that match their original Slack event types.
-adapter.use(new SlackEventMiddleware());
-
-// Use SlackMessageType middleware to further classify messages as direct_message, direct_mention, or mention
-adapter.use(new SlackMessageTypeMiddleware());
-
-const controller = new Botkit({
-  webhook_uri: '/slack/receive',
-  adapter: adapter,
-});
-
-// Once the bot has booted up its internal services, you can use them to do stuff.
-controller.ready(() => {
-  // load traditional developer-created local custom feature modules
-  controller.loadModules(__dirname + '/features',['.ts']);
-
-  /* catch-all that uses the CMS to trigger dialogs */
-  if (controller.plugins.cms) {
-    controller.on('message,direct_message', async (bot, message) => {
-      let results = false;
-      results = await controller.plugins.cms.testTrigger(bot, message);
-
-      if (results !== false) {
-        // do not continue middleware!
-        return false;
-      }
-    });
-  }
-
-});
-
-
-controller.webserver.get('/', (req: any, res: any) => {
-  res.send(`This app is running Botkit ${controller.version}.`);
-});
-
-controller.webserver.get('/login', (req: any, res: any) => {
-  // getInstallLink points to slack's oauth endpoint and includes clientId and scopes
-  res.redirect(controller.adapter.getInstallLink());
-});
-
-controller.webserver.get('/oauth', async (req: any, res: any) => {
+rtm.on('member_joined_channel', async (event) => {
   try {
-      const results = await controller.adapter.validateOauthCode(req.query.code);
-
-      console.log('FULL OAUTH DETAILS', results);
-
-      // Store token by team in bot state.
-      tokenCache[results.team_id] = results.bot.bot_access_token;
-
-      // Capture team to bot id
-      userCache[results.team_id] =  results.bot.bot_user_id;
-
-      res.json('Success!');
-
-  } catch (err) {
-      console.error('OAUTH ERROR:', err);
-      res.status(401);
-      res.send(err.message);
+    const reply = await rtm.sendMessage(`Welcome to the channel, <@${event.user}>`, event)
+    console.log('Message sent successfully', reply.ts);
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error1', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well1, that was unexpected.');
+    }
   }
 });
 
-let tokenCache: any = {};
-let userCache: any = {};
-
-async function getTokenForTeam(teamId: any): Promise<any> {
-  if (tokenCache[teamId]) {
-    return new Promise((resolve) => {
-      setTimeout(function () {
-        resolve(tokenCache[teamId]);
-      }, 150);
-    });
-  } else {
-    console.error('Team not found in tokenCache: ', teamId);
+rtm.on('connecting', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`connecting`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error2', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well2, that was unexpected.');
+    }
   }
-}
+});
 
-async function getBotUserByTeam(teamId: any): Promise<any> {
-  if (userCache[teamId]) {
-    return new Promise((resolve) => {
-      setTimeout(function () {
-        resolve(userCache[teamId]);
-      }, 150);
-    });
-  } else {
-    console.error('Team not found in userCache: ', teamId);
+rtm.on('authenticated', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`authenticated`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error3', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well3, that was unexpected.');
+    }
   }
-}
+});
+
+rtm.on('connected', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`connected`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error4', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well4, that was unexpected.');
+    }
+  }
+});
+
+rtm.on('ready', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`ready`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error5', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well5, that was unexpected.');
+    }
+  }
+});
+
+rtm.on('disconnecting', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`disconnecting`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error6', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well6, that was unexpected.');
+    }
+  }
+});
+
+rtm.on('reconnecting', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`reconnecting`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error7', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well7, that was unexpected.');
+    }
+  }
+});
+
+rtm.on('disconnected', async (event) => {
+  try {
+    const reply = await rtm.sendMessage(`disconnected`, 'DSX5KAFFV');
+  } catch (error) {
+    // Check the error code, and when its a platform error, log the whole response
+    if (error.code === ErrorCode.SendMessagePlatformError) {
+      console.log('error8', error.data);
+    } else {
+      // Some other error, oh no!
+      console.log('Well8, that was unexpected.');
+    }
+  }
+});
 
 
-
-
-
-
-
-
-
+(async () => {
+  await rtm.start();
+})();

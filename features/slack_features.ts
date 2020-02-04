@@ -2,8 +2,8 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  */
-import { SlackDialog } from "botbuilder-adapter-slack";
-import { Botkit } from "botkit";
+import { SlackDialog, SlackBotWorker } from "botbuilder-adapter-slack";
+import { Botkit, BotWorker } from "botkit";
 
 export default (controller: Botkit) => {
 
@@ -15,35 +15,35 @@ export default (controller: Botkit) => {
         }
     });
 
-    controller.on('direct_message', async (bot: any, message: any) => {
+    controller.on('direct_message', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, 'I heard a private message');
     });
 
-    controller.hears('dm me', 'message', async (bot: any, message: any) => {
+    controller.hears('dm me', 'message_received', async (bot: SlackBotWorker, message: any) => {
         await bot.startPrivateConversation(message.user);
         await bot.say(`Let's talk in private.`);
     });
 
-    controller.on('direct_mention', async (bot: any, message: any) => {
+    controller.on('direct_mention', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, `I heard a direct mention that said "${message.text}"`);
     });
 
-    controller.on('mention', async (bot: any, message: any) => {
+    controller.on('mention', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, `You mentioned me when you said "${message.text}"`);
     });
 
-    controller.hears('ephemeral', 'message,direct_message', async (bot: any, message: any) => {
+    controller.hears('ephemeral', 'message,direct_message', async (bot: SlackBotWorker, message: any) => {
         await bot.replyEphemeral(message, 'This is an ephemeral reply sent using bot.replyEphemeral()!');
     });
 
-    controller.hears('threaded', 'message,direct_message', async (bot: any, message: any) => {
+    controller.hears('threaded', 'message,direct_message', async (bot: SlackBotWorker, message: any) => {
         await bot.replyInThread(message, 'This is a reply in a thread!');
 
         await bot.startConversationInThread(message.channel, message.user, message.incoming_message.channelData.ts);
         await bot.say('And this should also be in that thread!');
     });
 
-    controller.hears('blocks', 'message', async (bot: any, message: any) => {
+    controller.hears('blocks', 'message', async (bot: SlackBotWorker, message: any) => {
 
         await bot.reply(message, {
             blocks: [
@@ -133,11 +133,11 @@ export default (controller: Botkit) => {
 
     });
 
-    controller.on('block_actions', async (bot: any, message: any) => {
+    controller.on('block_actions', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, `Sounds like your choice is ${message.incoming_message.channelData.actions[0].value}`)
     });
 
-    controller.on('slash_command', async (bot: any, message: any) => {
+    controller.on('slash_command', async (bot: SlackBotWorker, message: any) => {
         if (message.text === 'plain') {
             await bot.reply(message, 'This is a plain reply');
         } else if (message.text === 'public') {
@@ -151,7 +151,7 @@ export default (controller: Botkit) => {
 
     });
 
-    controller.on('interactive_message', async (bot: any, message: any) => {
+    controller.on('interactive_message', async (bot: SlackBotWorker, message: any) => {
 
         console.log('INTERACTIVE MESSAGE', message);
 
@@ -179,7 +179,7 @@ export default (controller: Botkit) => {
     });
 
 
-    controller.on('dialog_submission', async (bot: any, message: any) => {
+    controller.on('dialog_submission', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, 'Got a dialog submission');
 
         // Return an error to Slack
@@ -191,7 +191,7 @@ export default (controller: Botkit) => {
         ])
     });
 
-    controller.on('dialog_cancellation', async (bot: any, message: any) => {
+    controller.on('dialog_cancellation', async (bot: SlackBotWorker, message: any) => {
         await bot.reply(message, 'Got a dialog cancellation');
     });
 
