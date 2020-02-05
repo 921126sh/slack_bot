@@ -14,20 +14,22 @@ export default (app: App) => {
         if (cmd === "A") {
             let teamA = employee.A;
             for (let index = 0, length = teamA.length; index < length; index++) {
-                // 역할 인덱스, 직원, 직원역할
-                let rIdx: number = 0;
+                // 회원, 역할 인덱스, 직원, 직원역할
+                let rMbrIdx: number = 0;
+                let rRoleIdx: number = 0;
                 let member: string = "";
                 let mRole: string = etcRole;
 
                 // 랜덤으로 역할 할당
-                member = teamA[index];
+                rMbrIdx = Math.floor(Math.random() * teamA.length);
+                member = teamA[rMbrIdx];
                 if (0 < role.length) {
-                    rIdx = Math.floor(Math.random() * role.length);
-                    mRole = role[rIdx];
+                    rRoleIdx = Math.floor(Math.random() * role.length);
+                    mRole = role[rRoleIdx];
                 }
 
                 // 뽑힌 역할 제거
-                role.splice(rIdx, 1);
+                role.splice(rRoleIdx, 1);
 
                 // 메시지 조립
                 msg += `${member} ===> ${mRole}\n`;
@@ -38,20 +40,22 @@ export default (app: App) => {
         else if (cmd === "B") {
             let teamB = employee.B;
             for (let index = 0, length = teamB.length; index < length; index++) {
-                // 역할 인덱스, 직원, 직원역할
-                let rIdx: number = 0;
+                // 회원, 역할 인덱스, 직원, 직원역할
+                let rMbrIdx: number = 0;
+                let rRoleIdx: number = 0;
                 let member: string = "";
                 let mRole: string = etcRole;
 
                 // 랜덤으로 역할 할당
-                member = teamB[index];
+                rMbrIdx = Math.floor(Math.random() * teamB.length);
+                member = teamB[rMbrIdx];
                 if (0 < role.length) {
-                    rIdx = Math.floor(Math.random() * role.length);
-                    mRole = role[rIdx];
+                    rRoleIdx = Math.floor(Math.random() * role.length);
+                    mRole = role[rRoleIdx];
                 }
 
                 // 뽑힌 역할 제거
-                role.splice(rIdx, 1);
+                role.splice(rRoleIdx, 1);
 
                 // 메시지 조립
                 msg += `${member} ===> ${mRole}\n`;
