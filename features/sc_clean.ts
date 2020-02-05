@@ -1,32 +1,74 @@
+import fs from 'fs';
+import { App } from '@slack/bolt';
 
-export default (controller: any) => {
-    // controller.on('slash_command', async (bot: SlackBotWorker, message: any) => {
-        
-    //     switch (message.command) {
-    //         case "/clean":
-    //             if (message.token !== process.env.VERIFICATION_TOKEN) {
-    //                 return;
-    //             }
-    //             let cleanRole = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/물티슈", "분리수거"];
+export default (app: App) => {
+    let employee: any;
+    app.command("/clean", async ({ command, ack, say }) => {
+        employee = JSON.parse(fs.readFileSync(__dirname + "/employee.json", 'utf8'));
 
-    //             if (message.text === "A") {
-    //                 let teamA = [""];
-    //                 let food1 = cleanRole[Math.floor(Math.random() * cleanRole.length)];
-    //                 bot.replyPublic(message, "클린크린");
-    //             }
-    //             else if (message.text === "B") {
-    //                 let teamB = ["조용범 부장님", "송은미 대리님", "권영화 주임님", "이재혁 부장님", "김영근 차장님", "박수정 차장님", "하연우 대리님", "김성현 주임님", "황광훈씨"];
-    //                 let food1 = cleanRole[Math.floor(Math.random() * cleanRole.length)];
-    //             }
-    //             // /foodme help displays this message
-    //             else if (message.text === "help") {
-    //                 bot.replyPrivate(message, "\"/clean A\" 를 입력하면 A조 청소역할분담이 나옵니다.");
-    //             }
+        let msg = "";
+        let cmd = command.text.toUpperCase();
 
-    //             break;
-    //         default:
-    //             bot.replyPublic(message, "I'm sorry " + message.user +
-    //                 ", I'm afraid I can't do that. :robot_face:");
-    //     }
-    // });
+        let role = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/물티슈", "분리수거"];
+        let etcRole = "물티슈";
+        if (cmd === "A") {
+            let teamA = employee.A;
+            for (let index = 0, length = teamA.length; index < length; index++) {
+                // 역할 인덱스, 직원, 직원역할
+                let rIdx: number = 0;
+                let member: string = "";
+                let mRole: string = etcRole;
+
+                // 랜덤으로 역할 할당
+                member = teamA[index];
+                if (0 < role.length) {
+                    rIdx = Math.floor(Math.random() * role.length);
+                    mRole = role[rIdx];
+                }
+
+                // 뽑힌 역할 제거
+                role.splice(rIdx, 1);
+
+                // 메시지 조립
+                msg += `${member} ===> ${mRole}\n`;
+            }
+
+            say(msg);
+        }
+        else if (cmd === "B") {
+            let teamB = employee.B;
+            for (let index = 0, length = teamB.length; index < length; index++) {
+                // 역할 인덱스, 직원, 직원역할
+                let rIdx: number = 0;
+                let member: string = "";
+                let mRole: string = etcRole;
+
+                // 랜덤으로 역할 할당
+                member = teamB[index];
+                if (0 < role.length) {
+                    rIdx = Math.floor(Math.random() * role.length);
+                    mRole = role[rIdx];
+                }
+
+                // 뽑힌 역할 제거
+                role.splice(rIdx, 1);
+
+                // 메시지 조립
+                msg += `${member} ===> ${mRole}\n`;
+            }
+
+            say(msg);
+        }
+        // help displays this message
+        else if (cmd === "HELP") {
+            say("\"/clean A\" 를 입력하면 A조 청소역할분담이 나옵니다. :robot_face:");
+        }
+        else {
+            say("\"/clean help\" 로 명령을 확인해주세요! :robot_face:");
+        }
+
+        ack();
+        console.log("Entered into the app.command for /clean");
+
+    });
 }

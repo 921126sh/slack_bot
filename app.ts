@@ -4,7 +4,7 @@
 import { App, LogLevel } from '@slack/bolt';
 
 import dotenv from 'dotenv';
-import { loadSkills } from './features';
+import { loadFeatures } from './features';
 
 
 // 설정 로드 및 체크
@@ -21,18 +21,13 @@ const app: App = new App({
   logLevel: LogLevel.DEBUG
 });
 
-loadSkills(app);
+loadFeatures(app);
 
-// The echo command simply echoes on command
-app.command("/clean", async ({ command, ack, say }) => {
-  // Acknowledge command request
-  ack();
-  say('클린클ㄹ리ㅣ크키닠니닠닌');
-  console.log("Entered into the app.command for /clean");
-});
-
-
-app.start(process.env.PORT);
+(async () => {
+  // Start the app
+  await app.start(process.env.PORT);
+  console.log('App is running! ⚡️⚡️⚡️');
+})();
 
 // const options = {
 //   logLevel: LogLevel.DEBUG, // 로그레벨
