@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { App, LogLevel } from '@slack/bolt';
+import { App } from '@slack/bolt';
 
 export const loadSkills = (app: App) => {
   fs.readdirSync(__dirname).forEach((filename) => {

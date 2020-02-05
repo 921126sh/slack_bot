@@ -1,10 +1,24 @@
-# Botkit Starter Kit
+1. git clone xxxx
+2. https://api.slack.com/apps -> create app 
+3. .env 설정값 셋팅
+4. perimission -> scrope -> chat:write(봇 글쓰기) 설정
+5. install app to workspace (bot token generate됨)
+6. event subscription ON -> ngRok hosting url
+7. Subscribe to bot events -> message.im추가
+8. reinstall
 
-This is a Botkit starter kit for web, created with the [Yeoman generator](https://github.com/howdyai/botkit/tree/master/packages/generator-botkit#readme).
 
-To complete the configuration of this bot, make sure to update the included `.env` file with your platform tokens and credentials.
+# 참고
+https://api.slack.com/scopes
+https://api.slack.com/events-api
+https://slack.dev/bolt/concepts#message-listening
+---
 
-[Botkit Docs](https://botkit.ai/docs/v4)
-
-This bot is powered by [a folder full of modules](https://botkit.ai/docs/v4/core.html#organize-your-bot-code). 
-Edit the samples, and add your own in the [features/](features/) folder.
+.env
+SLACK_TOKEN
+CLIENT_ID
+CLIENT_SECRET
+CLIENT_SIGNING_SECRET
+VERIFICATION_TOKEN
+PORT
+REDIRECT_URI
