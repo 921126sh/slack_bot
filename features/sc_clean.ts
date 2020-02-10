@@ -3,26 +3,32 @@ import { App } from '@slack/bolt';
 
 export default (app: App) => {
     let employee: any;
+    let role = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/물티슈", "분리수거"];
+    let etcRole = "물티슈";
+
     app.command("/clean", async ({ command, ack, say }) => {
+        console.log('command', command);
         employee = JSON.parse(fs.readFileSync(__dirname + "/employee.json", 'utf8'));
 
         let msg = "";
         let cmd = command.text.toUpperCase();
 
-        let role = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/물티슈", "분리수거"];
-        let etcRole = "물티슈";
         if (cmd === "A") {
-            let teamA = employee.A;
-            for (let index = 0, length = teamA.length; index < length; index++) {
-                // 회원, 역할 인덱스, 직원, 직원역할
-                let rMbrIdx: number = 0;
+            let team = employee.A;
+
+            // 역할보다 인원이 많으면 기타역할 추가
+            if (role.length < team.length) {
+                appendRole(team.length - role.length);
+            }
+
+            for (let index = 0, length = team.length; index < length; index++) {
+                // 인덱스, 직원, 역할
                 let rRoleIdx: number = 0;
                 let member: string = "";
                 let mRole: string = etcRole;
 
                 // 랜덤으로 역할 할당
-                rMbrIdx = Math.floor(Math.random() * teamA.length);
-                member = teamA[rMbrIdx];
+                member = team[index];
                 if (0 < role.length) {
                     rRoleIdx = Math.floor(Math.random() * role.length);
                     mRole = role[rRoleIdx];
@@ -38,17 +44,21 @@ export default (app: App) => {
             say(msg);
         }
         else if (cmd === "B") {
-            let teamB = employee.B;
-            for (let index = 0, length = teamB.length; index < length; index++) {
-                // 회원, 역할 인덱스, 직원, 직원역할
-                let rMbrIdx: number = 0;
+            let team = employee.B;
+
+            // 역할보다 인원이 많으면 기타역할 추가
+            if (role.length < team.length) {
+                appendRole(team.length - role.length);
+            }
+
+            for (let index = 0, length = team.length; index < length; index++) {
+                // 인덱스, 직원, 역할
                 let rRoleIdx: number = 0;
                 let member: string = "";
                 let mRole: string = etcRole;
 
                 // 랜덤으로 역할 할당
-                rMbrIdx = Math.floor(Math.random() * teamB.length);
-                member = teamB[rMbrIdx];
+                member = team[index];
                 if (0 < role.length) {
                     rRoleIdx = Math.floor(Math.random() * role.length);
                     mRole = role[rRoleIdx];
@@ -75,4 +85,10 @@ export default (app: App) => {
         console.log("Entered into the app.command for /clean");
 
     });
+
+    function appendRole(len: number): void {
+        for (let index = 0; index < len; index++) {
+            role.push(etcRole);
+        }
+    }
 }
