@@ -5,7 +5,7 @@ export default (app: App) => {
     let employee: any;
     let team = [""];
     let msg = "";
-    let role = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/물티슈", "분리수거"];
+    let role = ["먼지걸레", "먼지걸레", "물걸레", "물걸레", "빗자루", "빗자루", "청소기", "화분/먼지털이", "분리수거"];
     let etcRole = "물티슈";
 
     // // 모달에 대한 콜백아이디로 submit 요청을 처리한다.
@@ -110,7 +110,7 @@ export default (app: App) => {
                                         "type": "button",
                                         "text": {
                                             "type": "plain_text",
-                                            "text": "Button",
+                                            "text": "GO!",
                                             "emoji": true
                                         },
                                         "value": "random"
