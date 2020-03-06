@@ -11,8 +11,6 @@ export default (app: App) => {
     // // 모달에 대한 콜백아이디로 submit 요청을 처리한다.
     // app.view('clean-modal', async ({ ack, body, view, context }) => {
     //     ack();
-    //     console.log(JSON.stringify(view.state));
-
     //     const user = body.user.id;
 
     //     app.client.chat.postMessage({
@@ -54,10 +52,10 @@ export default (app: App) => {
             let cmd = payload.text.split(' ')[1];
             if (cmd === "?") {
                 msg = "\"/청소 A\" 를 입력하면 A조 청소역할분담이 나옵니다. :robot_face:";
+                say(msg);
             }
             else if (undefined === cmd) {
                 employee = JSON.parse(fs.readFileSync(__dirname + "/employee.json", 'utf8'));
-
                 const result = await app.client.views.open({
                     token: context.botToken,
                     trigger_id: payload.trigger_id,
@@ -72,6 +70,11 @@ export default (app: App) => {
                         "close": {
                             "type": "plain_text",
                             "text": "취소",
+                            "emoji": true
+                        },
+                        "submit": {
+                            "type": "plain_text",
+                            "text": "확인",
                             "emoji": true
                         },
                         "blocks": [
